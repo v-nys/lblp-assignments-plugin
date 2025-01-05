@@ -2,10 +2,21 @@ use extism_pdk::*;
 use logic_based_learning_paths::domain_without_loading::{ArtifactMapping, ExtensionFieldProcessingPayload, ExtensionFieldProcessingResult, NodeProcessingPayload, NodeProcessingError};
 use schemars::JsonSchema;
 use serde::Deserialize;
-use std::fs::File;
 use std::path::{Path, PathBuf};
 use logic_based_learning_paths::prelude::*;
 use std::collections::HashSet;
+
+#[derive(FromBytes, Deserialize)]
+#[encoding(Json)]
+pub struct BoolPayload {
+    pub value: bool,
+}
+
+#[host_fn]
+extern "ExtismHost" {
+  fn file_exists(path: String) -> BoolPayload;
+}
+
 
 #[derive(Deserialize, Debug, Clone, JsonSchema)]
 struct Assignment {
@@ -16,24 +27,12 @@ struct Assignment {
     attachments: Option<Vec<String>>,
 }
 
+// TODO: update when better host fn is available!
 fn file_is_readable(file_path: &Path) -> bool {
-    file_path.is_file() && File::open(file_path).is_ok()
+    let file_path_str = file_path.to_str().unwrap();
+    let BoolPayload { value } = (unsafe { file_exists(file_path.to_str().expect("don't see why I wouldn't get a string").to_owned()) }).expect("Thought this would be fine.");
+    value
 }
-
-/*
-#[plugin_fn]
-pub fn get_extension_field_schema(
-    _node_processing_payload: NodeProcessingPayload,
-) -> FnResult<HashMap<(String, bool), serde_json::Value>> {
-    let mut map = HashMap::new();
-    let _ = map.insert(
-        ("assignments".into(), false),
-        serde_json::to_value(schema_for!(Vec<Assignment>)).expect("Generating a schema for this type works."),
-    );
-    Ok(map)
-}
-*/
-
 
 #[plugin_fn]
 pub fn process_extension_field(
