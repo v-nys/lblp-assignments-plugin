@@ -1,16 +1,10 @@
 use extism_pdk::*;
-use logic_based_learning_paths::domain_without_loading::{ArtifactMapping, ExtensionFieldProcessingPayload, ExtensionFieldProcessingResult, NodeProcessingPayload, NodeProcessingError};
+use logic_based_learning_paths::domain_without_loading::{ArtifactMapping, ExtensionFieldProcessingPayload, ExtensionFieldProcessingResult, NodeProcessingPayload, NodeProcessingError, BoolPayload};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use logic_based_learning_paths::prelude::*;
 use std::collections::HashSet;
-
-#[derive(FromBytes, Deserialize)]
-#[encoding(Json)]
-pub struct BoolPayload {
-    pub value: bool,
-}
 
 #[host_fn]
 extern "ExtismHost" {
@@ -23,13 +17,12 @@ struct Assignment {
     id: String,
     title: Option<String>,
     // TODO: vermelden dat dit altijd relatief en met fwd slashes moet!
-    // anders lastig als iemand op Windows schrijft en UNIX gebruikt of vice versa
     attachments: Option<Vec<String>>,
 }
 
 // TODO: update when better host fn is available!
+// currently only checks whether file exists in cluster, not whether it can be read
 fn file_is_readable(file_path: &Path) -> bool {
-    let file_path_str = file_path.to_str().unwrap();
     let BoolPayload { value } = (unsafe { file_exists(file_path.to_str().expect("don't see why I wouldn't get a string").to_owned()) }).expect("Thought this would be fine.");
     value
 }
