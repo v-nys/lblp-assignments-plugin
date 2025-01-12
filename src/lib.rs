@@ -1,5 +1,5 @@
 use extism_pdk::*;
-use logic_based_learning_paths::domain_without_loading::{ArtifactMapping, BoolPayload, ExtensionFieldProcessingPayload, ExtensionFieldProcessingResult, NodeProcessingError, NodeProcessingPayload, ParamsSchema};
+use logic_based_learning_paths::domain_without_loading::{ArtifactMapping, BoolPayload, DummyPayload, ExtensionFieldProcessingPayload, ExtensionFieldProcessingResult, NodeProcessingError, NodeProcessingPayload, ParamsSchema};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use std::{collections::HashMap, path::{Path, PathBuf}};
@@ -29,21 +29,21 @@ fn file_is_readable(file_path: &Path) -> bool {
 }
 
 #[plugin_fn]
-pub fn get_params_schema() -> FnResult<ParamsSchema> {
+pub fn get_params_schema(_: ()) -> FnResult<ParamsSchema> {
     let schema = schemars::schema_for!(Option<bool>);
     let mut parameters = HashMap::new();
     parameters.insert(
-        ("require_model_solutions".into(), false),
-        serde_json::to_value(schema).expect("Should be convertible.")
+        "require_model_solutions".into(),
+        (false, serde_json::to_value(schema).expect("Should be convertible."))
     );
     Ok(ParamsSchema { schema: parameters })
 }
 
 #[plugin_fn]
-pub fn get_extension_field_schema() -> FnResult<ParamsSchema> {
+pub fn get_extension_field_schema(_: DummyPayload) -> FnResult<ParamsSchema> {
     let mut map = HashMap::new();
-    let _ = map.insert(("assignments".into(), false),
-                       serde_json::to_value(schema_for!(Vec<Assignment>)).unwrap());
+    let _ = map.insert("assignments".into(),
+                       (false, serde_json::to_value(schema_for!(Vec<Assignment>)).unwrap()));
     Ok(ParamsSchema { schema: map })
 }
 
